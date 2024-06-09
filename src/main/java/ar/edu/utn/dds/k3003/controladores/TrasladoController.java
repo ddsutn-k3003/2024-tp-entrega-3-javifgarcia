@@ -41,7 +41,8 @@ public class TrasladoController {
     }
 
     public void trasladosColaborador(Context context){
-        var id = context.pathParamAsClass("id", Long.class).get();
+        //var id = context.pathParamAsClass("colaboradorId", Long.class).get();
+        var id = context.queryParamAsClass("colaboradorId", Long.class).get();
         try {
             var listaDeTraslados = this.fachada.trasladosDeColaborador(id, LocalDateTime.now().getMonthValue(), LocalDateTime.now().getYear());
             context.json(listaDeTraslados);
