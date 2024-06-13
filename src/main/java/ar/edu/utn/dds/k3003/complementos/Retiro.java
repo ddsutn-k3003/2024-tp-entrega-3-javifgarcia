@@ -4,12 +4,16 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Setter
 @Getter
 @AllArgsConstructor
+
+
 public class Retiro {
+
     private Long id;
     private String qrVianda;
     private String tarjeta;

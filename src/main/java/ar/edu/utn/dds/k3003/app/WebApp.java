@@ -11,17 +11,25 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.javalin.Javalin;
 import io.javalin.json.JavalinJackson;
+
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.TimeZone;
 
 public class WebApp {
-
+//nuevo
+    public static EntityManagerFactory entityManagerFactory;
     public static void main(String[] args) {
+        //nuevo
+        startEntityManagerFactory();
 
         var env = System.getenv();
         var objectMapper = createObjectMapper();
-        var fachada = new Fachada();
+        var fachada = new Fachada(entityManagerFactory);
         fachada.setViandasProxy(new ViandasProxy(objectMapper));
         fachada.setHeladerasProxy(new HeladerasProxy(objectMapper));
 
@@ -41,6 +49,23 @@ public class WebApp {
         app.get("/traslados/search/findByColaboradorId", trasladosController::trasladosColaborador);
         app.get("/traslados/{id}", trasladosController::obtener);
         app.patch("/traslados/{id}", trasladosController::cambiarEstado);
+    }
+
+    //nuevo metodo
+    public static void startEntityManagerFactory(){
+        Map<String, String> env = System.getenv();
+        Map<String, Object> configOverrides = new HashMap<String, Object>();
+        String[] keys = new String[] { "javax.persistence.jdbc.url", "javax.persistence.jdbc.user",
+                "javax.persistence.jdbc.password", "javax.persistence.jdbc.driver", "hibernate.hbm2ddl.auto",
+                "hibernate.connection.pool_size", "hibernate.show_sql" };
+        for (String key : keys) {
+            if (env.containsKey(key)) {
+                String value = env.get(key);
+                configOverrides.put(key, value);
+            }
+        }
+        entityManagerFactory = Persistence.createEntityManagerFactory("db", configOverrides);
+
     }
 
     public static ObjectMapper createObjectMapper() {

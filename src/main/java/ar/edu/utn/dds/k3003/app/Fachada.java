@@ -17,12 +17,17 @@ import lombok.Getter;
 import lombok.Setter;
 
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 import java.util.*;
 
 @Setter
 @Getter
+
 public class Fachada implements ar.edu.utn.dds.k3003.facades.FachadaLogistica {
 
+    private EntityManagerFactory entityManagerFactory;
     private final RutaRepository rutaRepository;
     private final RutaMapper rutaMapper;
     private final TrasladoRepository trasladoRepository;
@@ -31,6 +36,13 @@ public class Fachada implements ar.edu.utn.dds.k3003.facades.FachadaLogistica {
     private FachadaHeladeras fachadaHeladeras;
 
 
+    public Fachada(EntityManagerFactory entityManagerFactory){
+        this.entityManagerFactory = entityManagerFactory;
+        this.rutaRepository = new RutaRepository();
+        this.rutaMapper = new RutaMapper();
+        this.trasladoMapper = new TrasladoMapper();
+        this.trasladoRepository = new TrasladoRepository();
+    }
     public Fachada(){
         this.rutaRepository = new RutaRepository();
         this.rutaMapper = new RutaMapper();
@@ -39,46 +51,77 @@ public class Fachada implements ar.edu.utn.dds.k3003.facades.FachadaLogistica {
     }
 
 
+
+
     @Override
     public RutaDTO agregar(RutaDTO rutaDTO){
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        rutaRepository.setEntityManager(entityManager);
+        rutaRepository.getEntityManager().getTransaction().begin();
         Ruta ruta = new Ruta(rutaDTO.getColaboradorId(), rutaDTO.getHeladeraIdOrigen(), rutaDTO.getHeladeraIdDestino());
         ruta = this.rutaRepository.save(ruta);
+        rutaRepository.getEntityManager().getTransaction().commit();
+        rutaRepository.getEntityManager().close();
         return rutaMapper.map(ruta);
     }
 
     @Override
     public TrasladoDTO buscarXId (Long id){
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        trasladoRepository.setEntityManager(entityManager);
+        trasladoRepository.getEntityManager().getTransaction().begin();
         Traslado trasladoBuscado =  this.trasladoRepository.findById(id);
+        trasladoRepository.getEntityManager().getTransaction().commit();
+        trasladoRepository.getEntityManager().close();
         return trasladoMapper.map(trasladoBuscado);
     }
 
     @Override
     public TrasladoDTO asignarTraslado(TrasladoDTO trasladoDTO) throws TrasladoNoAsignableException {
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        rutaRepository.setEntityManager(entityManager);
+        trasladoRepository.setEntityManager(entityManager);
 
+        trasladoRepository.getEntityManager().getTransaction().begin();
         fachadaViandas.buscarXQR(trasladoDTO.getQrVianda());
 
         List<Ruta> rutasPosibles = this.rutaRepository.findByHeladeras(trasladoDTO.getHeladeraOrigen(), trasladoDTO.getHeladeraDestino());
 
         if(rutasPosibles.isEmpty()){
+            entityManager.getTransaction().rollback();
+            entityManager.close();
+
             throw new TrasladoNoAsignableException("El traslado no es asignable, no tiene rutas posibles.");
         }
+
 
         Traslado trasladoAsignado = new Traslado(trasladoDTO.getQrVianda(), rutasPosibles.get(0), EstadoTrasladoEnum.ASIGNADO, trasladoDTO.getFechaTraslado());
 
         trasladoAsignado = this.trasladoRepository.save(trasladoAsignado);
+
+        trasladoRepository.getEntityManager().getTransaction().commit();
+        trasladoRepository.getEntityManager().close();
+        rutaRepository.getEntityManager().close();
 
         return trasladoMapper.map(trasladoAsignado);
     }
     @Override
     public List<TrasladoDTO> trasladosDeColaborador(Long colaboradorId, Integer mes, Integer anio){
 
-        List<Traslado> trasladosDeColaborador = this.trasladoRepository.getTraslados().stream().filter(x -> x.getRuta().getColaboradorId().equals(colaboradorId)
-                                                && x.getFechaTraslado().getMonthValue() == mes
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        trasladoRepository.setEntityManager(entityManager);
+        trasladoRepository.getEntityManager().getTransaction().begin();
+
+        List<Traslado> trasladosDeColaborador = trasladoRepository.findByColaborador(colaboradorId);
+
+        List<Traslado> trasladosDeColaboradorPedidos = trasladosDeColaborador.stream().filter(x -> x.getFechaTraslado().getMonthValue() == mes
                                                 && x.getFechaTraslado().getYear() == anio).toList();
 
+        trasladoRepository.getEntityManager().getTransaction().commit();
+        trasladoRepository.getEntityManager().close();
         List<TrasladoDTO> trasladosDTOColaborador = new ArrayList<>();
 
-            for(Traslado trasladoColaborador : trasladosDeColaborador){
+            for(Traslado trasladoColaborador : trasladosDeColaboradorPedidos){
                 TrasladoDTO trasladoDTO = new TrasladoDTO(trasladoColaborador.getQrVianda(),
                                             trasladoColaborador.getEstado(),
                                             trasladoColaborador.getFechaTraslado(),

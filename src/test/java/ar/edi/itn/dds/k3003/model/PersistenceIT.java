@@ -1,6 +1,8 @@
 package ar.edi.itn.dds.k3003.model;
 
 import ar.edu.utn.dds.k3003.complementos.Ruta;
+import ar.edu.utn.dds.k3003.complementos.Traslado;
+import ar.edu.utn.dds.k3003.facades.dtos.EstadoTrasladoEnum;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -8,6 +10,8 @@ import org.junit.jupiter.api.Test;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
+
+import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -30,7 +34,7 @@ public class PersistenceIT {
     }
 
     @Test
-    public void testGuardarYRecuperarRuta() throws Exception{
+    public void testGuardarYRecuperarRutaYTraslado() throws Exception{
         long colaboradorIdPrueba = 0;
         Ruta ruta1 = new Ruta(colaboradorIdPrueba,0,0);
         entityManager.getTransaction().begin();
@@ -39,9 +43,18 @@ public class PersistenceIT {
         entityManager.close();
 
         entityManager = entityManagerFactory.createEntityManager();
-        Ruta ruta2 = entityManager.find(Ruta.class,1L);
+        Traslado traslado1 = new Traslado("123", ruta1, EstadoTrasladoEnum.ASIGNADO, LocalDateTime.now());
+        entityManager.getTransaction().begin();
+        entityManager.persist(traslado1);
+        entityManager.getTransaction().commit();
+        entityManager.close();
 
-        assertEquals(ruta1.getHeladeraIdOrigen(), ruta2.getHeladeraIdOrigen());
+        entityManager = entityManagerFactory.createEntityManager();
+        Traslado traslado2 = entityManager.find(Traslado.class,1L);
+
+
+        assertEquals(traslado1.getQrVianda(), traslado2.getQrVianda());
     }
 
 }
+//Estos test funcionan!
