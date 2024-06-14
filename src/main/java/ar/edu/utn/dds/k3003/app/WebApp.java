@@ -2,6 +2,7 @@ package ar.edu.utn.dds.k3003.app;
 
 import ar.edu.utn.dds.k3003.clientes.HeladerasProxy;
 import ar.edu.utn.dds.k3003.clientes.ViandasProxy;
+import ar.edu.utn.dds.k3003.controladores.DBController;
 import ar.edu.utn.dds.k3003.controladores.RutaController;
 import ar.edu.utn.dds.k3003.controladores.TrasladoController;
 import ar.edu.utn.dds.k3003.facades.dtos.Constants;
@@ -43,12 +44,14 @@ public class WebApp {
 
         var rutaController = new RutaController(fachada);
         var trasladosController = new TrasladoController(fachada);
+        var dbController = new DBController(fachada);
 
         app.post("/rutas", rutaController::agregar);
         app.post("/traslados", trasladosController::asignar);
         app.get("/traslados/search/findByColaboradorId", trasladosController::trasladosColaborador);
         app.get("/traslados/{id}", trasladosController::obtener);
         app.patch("/traslados/{id}", trasladosController::cambiarEstado);
+       app.delete("/cleanup" , dbController::eliminarDB);
     }
 
     //nuevo metodo
