@@ -133,7 +133,6 @@ public class Fachada implements ar.edu.utn.dds.k3003.facades.FachadaLogistica {
 
         return trasladosDTOColaborador;
     }
-
     @Override
     public void trasladoRetirado(Long trasladoId){
         TrasladoDTO trasladoBuscado = this.buscarXId(trasladoId);
@@ -172,6 +171,14 @@ public class Fachada implements ar.edu.utn.dds.k3003.facades.FachadaLogistica {
                                             trasladoTerminado.getFechaTraslado()));
     }
 
+    public void modificarEstadoTraslado(Long trasladoId, EstadoTrasladoEnum nuevoEstado) throws NoSuchElementException{
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        trasladoRepository.setEntityManager(entityManager);
+        trasladoRepository.getEntityManager().getTransaction().begin();
+        trasladoRepository.modificarEstadoTraslado(trasladoId, nuevoEstado);
+        trasladoRepository.getEntityManager().getTransaction().commit();
+        trasladoRepository.getEntityManager().close();
+    }
     @Override
     public void setHeladerasProxy(FachadaHeladeras fachadaHeladeras){
         this.fachadaHeladeras = fachadaHeladeras;

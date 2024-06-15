@@ -52,6 +52,7 @@ public class TrasladoController {
         }
     }
 
+    /*
     public void cambiarEstado(Context context) {
         var id = context.pathParamAsClass("id", Long.class).get();
         try {
@@ -62,5 +63,14 @@ public class TrasladoController {
             context.result(ex.getLocalizedMessage());
             context.status(HttpStatus.NOT_FOUND);
         }
+    }
+
+     */
+
+    public void cambiarEstado(Context context){
+        var id = context.pathParamAsClass("id",Long.class).get();
+        EstadoTrasladoEnum nuevoEstado = context.bodyAsClass(EstadoTrasladoEnum.class);
+        fachada.modificarEstadoTraslado(id, nuevoEstado);
+        context.result("Estado del traslado modificado");
     }
 }

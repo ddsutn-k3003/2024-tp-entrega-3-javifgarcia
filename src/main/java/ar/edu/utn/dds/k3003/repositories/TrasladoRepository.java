@@ -2,6 +2,8 @@ package ar.edu.utn.dds.k3003.repositories;
 
 import ar.edu.utn.dds.k3003.complementos.Ruta;
 import ar.edu.utn.dds.k3003.complementos.Traslado;
+import ar.edu.utn.dds.k3003.facades.dtos.EstadoTrasladoEnum;
+import ar.edu.utn.dds.k3003.facades.dtos.TrasladoDTO;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -73,4 +75,9 @@ public class TrasladoRepository {
         */
     }
 
+    public void modificarEstadoTraslado(Long trasladoId, EstadoTrasladoEnum nuevoEstado) throws NoSuchElementException {
+        Traslado trasladoViejo = this.findById(trasladoId);
+        trasladoViejo.setEstado(nuevoEstado);
+        entityManager.merge(trasladoViejo);
+    }
 }
